@@ -36,4 +36,7 @@ $(document).ready(function() {
     location.reload('/');
    });
    });
+   $(".download").click(function(){
+    var id=$(this).val();
+  });
 });

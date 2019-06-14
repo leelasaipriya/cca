@@ -7,16 +7,44 @@ var collection = db.get('guestdetails');
 var collection1=db.get('orderlist');
 var login=db.get('login');
 /* GET home page. */
-router.get('/',function(req,res){
-	res.render('login');
+
+router.get('/', function(req, res) { 
+	if(req.session&&req.session.user){
+		res.locals.user=req.session.user;
+        res.redirect('/index');
+    }
+    else{
+    	req.session.reset();
+    	res.render('login');
+    }
+
 });
-router.get('/index', function(req, res, next) {
-	collection1.find({},function(err,docs){
+
+router.get('/index',function(req,res){
+	if(req.session&&req.session.user){
+		res.locals.user=req.session.user;
+	    collection1.find({},function(err,docs){
+	    	console.log(docs);
+	    	res.locals.data=docs;
+	    res.render('index');
+        });
+	}
+	else{
+		res.redirect('/');
+	}
+});
+router.get('/download',function(req,res){
+	res.render('index');
+});
+router.post('/download',function(req,res){
+	var id=req.body.no;
+	collection1.find({"_id":id},function(err,docs){
 		console.log(docs);
-		res.locals.data=docs;	
-		res.render('index');
+		res.send(docs);
+		
 	});
 });
+
 function gettimestamp(currentdate,temp)
 {
   var timestamp=currentdate+" "+temp;
@@ -56,6 +84,8 @@ console.log(password);
     }
     else if(docs){
     console.log("success");
+    delete docs.password;
+    req.session.user=docs;
     res.redirect('/index');
     }
     else{
@@ -102,8 +132,7 @@ res.send(docs);
 });
 });
 router.post('/update',function(req,res){
-	console.log(req.body.teamsize);
-	console.log(req.body.id);
+	
 	var data={
 		Teamsize:req.body.teamsize,
 		breakfast:req.body.breakfast,
@@ -130,4 +159,9 @@ collection1.remove({"_id":id},function(err,docs){
 res.send(docs);
     });
 });
+router.get('/logout',function(req,res){
+    req.session.reset();
+	res.redirect('/');
+})
+
 module.exports = router;
